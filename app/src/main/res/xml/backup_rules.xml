@@ -1,0 +1,3 @@
+<full-backup-content>
+    <exclude domain="sharedpref" path="rawrail_secure_v3.xml" />
+</full-backup-content>

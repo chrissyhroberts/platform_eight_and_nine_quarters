@@ -1,0 +1,52 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <application
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:label="Platform 8 9/4"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@style/Theme.RawRail"
+        android:usesCleartextTraffic="false">
+
+        <service android:name=".watch.RouteWatchService" android:exported="false" android:foregroundServiceType="dataSync" />
+
+        <receiver
+            android:name=".widget.LiveTimetableWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_live_timetable_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/live_timetable_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.RailWidgetActionReceiver"
+            android:exported="false" />
+
+        <activity
+            android:name=".widget.LiveTimetableWidgetConfigureActivity"
+            android:exported="true"
+            android:label="@string/widget_timetable_config_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

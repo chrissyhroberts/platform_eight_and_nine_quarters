@@ -1,0 +1,675 @@
+{
+    "trainServices": [
+        {
+            "formation": {
+                "coaches": [
+                    {
+                        "coachClass": "Standard",
+                        "loading": 25,
+                        "loadingSpecified": true,
+                        "number": "1"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loading": 45,
+                        "loadingSpecified": true,
+                        "number": "2"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loading": 45,
+                        "loadingSpecified": true,
+                        "number": "3"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loading": 33,
+                        "loadingSpecified": true,
+                        "number": "4"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loading": 22,
+                        "loadingSpecified": true,
+                        "number": "5"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loading": 25,
+                        "loadingSpecified": true,
+                        "number": "6"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loading": 23,
+                        "loadingSpecified": true,
+                        "number": "7"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loading": 33,
+                        "loadingSpecified": true,
+                        "number": "8"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loading": 25,
+                        "loadingSpecified": true,
+                        "number": "9"
+                    }
+                ]
+            },
+            "futureCancellation": false,
+            "futureDelay": true,
+            "origin": [
+                {
+                    "locationName": "Abbey Wood",
+                    "crs": "ABW",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "Reading",
+                    "crs": "RDG",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:05",
+            "etd": "On time",
+            "platform": "B",
+            "operator": "Elizabeth Line",
+            "operatorCode": "XR",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 0,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8902916LIVSTLL_"
+        },
+        {
+            "futureCancellation": false,
+            "futureDelay": false,
+            "origin": [
+                {
+                    "locationName": "London Liverpool Street",
+                    "crs": "LST",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "Stansted Airport",
+                    "crs": "SSD",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:06",
+            "etd": "On time",
+            "platform": "3",
+            "operator": "Greater Anglia",
+            "operatorCode": "LE",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 12,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8913147LIVST___"
+        },
+        {
+            "formation": {
+                "coaches": [
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "1"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "2"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "3"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "4"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "5"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "6"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "7"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "8"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "9"
+                    }
+                ]
+            },
+            "futureCancellation": false,
+            "futureDelay": true,
+            "origin": [
+                {
+                    "locationName": "Reading",
+                    "crs": "RDG",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "Abbey Wood",
+                    "crs": "ABW",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:07",
+            "etd": "On time",
+            "platform": "A",
+            "operator": "Elizabeth Line",
+            "operatorCode": "XR",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 0,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8902982LIVSTLL_"
+        },
+        {
+            "futureCancellation": false,
+            "futureDelay": false,
+            "origin": [
+                {
+                    "locationName": "London Liverpool Street",
+                    "crs": "LST",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "Hertford East",
+                    "crs": "HFE",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:08",
+            "etd": "On time",
+            "platform": "4",
+            "operator": "Greater Anglia",
+            "operatorCode": "LE",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 5,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8913673LIVST___"
+        },
+        {
+            "futureCancellation": false,
+            "futureDelay": false,
+            "origin": [
+                {
+                    "locationName": "London Liverpool Street",
+                    "crs": "LST",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "Ipswich",
+                    "crs": "IPS",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:08",
+            "etd": "On time",
+            "platform": "15",
+            "operator": "Greater Anglia",
+            "operatorCode": "LE",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 10,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8913345LIVST___"
+        },
+        {
+            "formation": {
+                "coaches": [
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "1"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "2"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "3"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "4"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "5"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "6"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "7"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "8"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "9"
+                    }
+                ]
+            },
+            "futureCancellation": false,
+            "futureDelay": false,
+            "origin": [
+                {
+                    "locationName": "Shenfield",
+                    "crs": "SNF",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "London Paddington",
+                    "crs": "PAD",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:09",
+            "etd": "On time",
+            "platform": "B",
+            "operator": "Elizabeth Line",
+            "operatorCode": "XR",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 0,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8903176LIVSTLL_"
+        },
+        {
+            "formation": {
+                "coaches": [
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "1"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "2"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "3"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "4"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "5"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "6"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "7"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "8"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "9"
+                    }
+                ]
+            },
+            "futureCancellation": false,
+            "futureDelay": false,
+            "origin": [
+                {
+                    "locationName": "London Paddington",
+                    "crs": "PAD",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "Gidea Park",
+                    "crs": "GDP",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:11",
+            "etd": "On time",
+            "platform": "A",
+            "operator": "Elizabeth Line",
+            "operatorCode": "XR",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 0,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8902774LIVSTLL_"
+        },
+        {
+            "formation": {
+                "coaches": [
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "1"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "2"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "3"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "4"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "5"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "6"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "7"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "8"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "9"
+                    }
+                ]
+            },
+            "futureCancellation": false,
+            "futureDelay": false,
+            "origin": [
+                {
+                    "locationName": "Abbey Wood",
+                    "crs": "ABW",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "Heathrow Airport T4",
+                    "crs": "HAF",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:12",
+            "etd": "On time",
+            "platform": "B",
+            "operator": "Elizabeth Line",
+            "operatorCode": "XR",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 0,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8902840LIVSTLL_"
+        },
+        {
+            "formation": {
+                "coaches": [
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "1"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "2"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "3"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "4"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "5"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "6"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "7"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "8"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "9"
+                    }
+                ]
+            },
+            "futureCancellation": false,
+            "futureDelay": false,
+            "origin": [
+                {
+                    "locationName": "Heathrow Airport T4",
+                    "crs": "HAF",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "Abbey Wood",
+                    "crs": "ABW",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:15",
+            "etd": "On time",
+            "platform": "A",
+            "operator": "Elizabeth Line",
+            "operatorCode": "XR",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 0,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8902984LIVSTLL_"
+        },
+        {
+            "formation": {
+                "coaches": [
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "1"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "2"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "3"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "4"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "5"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "6"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "7"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "8"
+                    },
+                    {
+                        "coachClass": "Standard",
+                        "loadingSpecified": false,
+                        "number": "9"
+                    }
+                ]
+            },
+            "futureCancellation": false,
+            "futureDelay": false,
+            "origin": [
+                {
+                    "locationName": "Gidea Park",
+                    "crs": "GDP",
+                    "assocIsCancelled": false
+                }
+            ],
+            "destination": [
+                {
+                    "locationName": "London Paddington",
+                    "crs": "PAD",
+                    "assocIsCancelled": false
+                }
+            ],
+            "std": "18:16",
+            "etd": "On time",
+            "platform": "B",
+            "operator": "Elizabeth Line",
+            "operatorCode": "XR",
+            "isCircularRoute": false,
+            "isCancelled": false,
+            "filterLocationCancelled": false,
+            "serviceType": "train",
+            "length": 0,
+            "detachFront": false,
+            "isReverseFormation": false,
+            "serviceID": "8903177LIVSTLL_"
+        }
+    ],
+    "generatedAt": "2026-09-20T18:06:48.8548765+01:00",
+    "locationName": "London Liverpool Street",
+    "crs": "LST",
+    "filterType": "to",
+    "platformAvailable": true,
+    "areServicesAvailable": true,
+    "Xmlns": {
+        "Count": 8
+    }
+}

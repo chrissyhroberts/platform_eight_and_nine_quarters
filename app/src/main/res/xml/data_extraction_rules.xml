@@ -1,0 +1,4 @@
+<data-extraction-rules>
+    <cloud-backup><exclude domain="sharedpref" path="rawrail_secure_v3.xml" /></cloud-backup>
+    <device-transfer><exclude domain="sharedpref" path="rawrail_secure_v3.xml" /></device-transfer>
+</data-extraction-rules>
