@@ -66,7 +66,7 @@ class DarwinPublicClient(
         val request = Request.Builder()
             .url(url)
             .header("Accept", "application/json")
-            .header("User-Agent", "Platform-8-9-4-Android/0.20.1")
+            .header("User-Agent", "Platform-8-9-4-Android/0.20.2")
             .apply {
                 when (connection.authMode) {
                     AuthMode.RDM_API_KEY -> {
@@ -103,43 +103,63 @@ class DarwinPublicClient(
     suspend fun reasonCodeList(connection: DarwinConnection): Map<Int, ReasonDescription> =
         withContext(Dispatchers.IO) {
             require(connection.authMode == AuthMode.RDM_API_KEY) { "Reason-code lookup requires an RDM API key." }
-            require(connection.apiKey.isNotBlank()) { "RDM API key is missing." }
-            val prefix = connection.boardEndpointTemplate.substringBefore("/api/", missingDelimiterValue = "")
-            require(prefix.isNotBlank()) { "Staff endpoint must contain /api/." }
-            val url = "$prefix/api/20220120/GetReasonCodeList".toHttpUrl()
+            require(connection.stationListApiKey.isNotBlank()) {
+                "Reference Data API key is missing. Staff and Reference Data use separate product keys."
+            }
+            val endpoint = resolveReasonCodeEndpoint(connection)
+            require(endpoint.isNotBlank()) {
+                "Add the Reference Data GetReasonCodeList endpoint in Settings."
+            }
+            val url = endpoint.toHttpUrl()
             require(url.isHttps && url.host in setOf("api1.raildata.org.uk", "realtime.nationalrail.co.uk")) {
                 "Use an official HTTPS railway endpoint."
             }
             val request = Request.Builder()
                 .url(url)
                 .header("Accept", "application/json")
-                .header("User-Agent", "Platform-8-9-4-Android/0.20.1")
-                .header("x-apikey", connection.apiKey)
+                .header("User-Agent", "Platform-8-9-4-Android/0.20.2")
+                .header("x-apikey", connection.stationListApiKey)
                 .build()
             http.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) error("Darwin reason-code HTTP ${response.code}: ${response.message}")
-                parseReasonCodeList(response.body.string())
+                parseReasonCodeList(response.body.string()).also {
+                    require(it.isNotEmpty()) { "Darwin returned an empty or unrecognised reason-code list." }
+                }
             }
         }
 
     fun parseReasonCodeList(json: String): Map<Int, ReasonDescription> {
         val root = Json { ignoreUnknownKeys = true }.parseToJsonElement(json)
-        val items = when (root) {
-            is JsonArray -> root
-            is JsonObject -> listOf("reasons", "reasonCodes", "reason").firstNotNullOfOrNull { key ->
-                root[key] as? JsonArray
-            } ?: JsonArray(emptyList())
-            else -> JsonArray(emptyList())
+        val descriptions = mutableListOf<ReasonDescription>()
+
+        fun JsonObject.valueIgnoringCase(vararg names: String): JsonElement? =
+            entries.firstOrNull { (key, _) -> names.any { key.equals(it, ignoreCase = true) } }?.value
+
+        fun JsonObject.stringIgnoringCase(vararg names: String): String? =
+            valueIgnoringCase(*names)?.jsonPrimitiveOrNull()?.contentOrNull
+                ?.trim()?.takeIf { it.isNotEmpty() }
+
+        fun collect(node: JsonElement) {
+            when (node) {
+                is JsonArray -> node.forEach(::collect)
+                is JsonObject -> {
+                    val code = node.valueIgnoringCase("code", "Value", "value")
+                        ?.jsonPrimitiveOrNull()?.contentOrNull?.toIntOrNull()
+                    val late = node.stringIgnoringCase("lateReason", "delayReason")
+                    val cancellation = node.stringIgnoringCase(
+                        "cancReason", "cancelReason", "cancellationReason"
+                    )
+                    if (code != null && (late != null || cancellation != null)) {
+                        descriptions += ReasonDescription(code, late, cancellation)
+                    } else {
+                        node.values.forEach(::collect)
+                    }
+                }
+                else -> Unit
+            }
         }
-        return items.mapNotNull { item ->
-            val obj = item.jsonObjectOrNull() ?: return@mapNotNull null
-            val code = int(obj, "code", "Value", "value") ?: return@mapNotNull null
-            ReasonDescription(
-                code = code,
-                lateReason = string(obj, "lateReason", "delayReason"),
-                cancellationReason = string(obj, "cancReason", "cancelReason", "cancellationReason"),
-            )
-        }.associateBy { it.code }
+        collect(root)
+        return descriptions.associateBy { it.code }
     }
 
     fun parseBoard(json: String, requestedCrs: String): StationBoard {
@@ -388,4 +408,19 @@ class DarwinPublicClient(
 
     private fun JsonElement.jsonObjectOrNull(): JsonObject? = this as? JsonObject
     private fun JsonElement.jsonPrimitiveOrNull(): JsonPrimitive? = this as? JsonPrimitive
+}
+
+/**
+ * RDM exposes the reason catalogue through the Reference Data product, not the
+ * Staff departure-board product. Existing installations with a GetStationList
+ * URL can derive the reason operation because both share a product prefix/key.
+ */
+internal fun resolveReasonCodeEndpoint(connection: DarwinConnection): String {
+    connection.reasonCodeEndpoint.trim().takeIf { it.isNotEmpty() }?.let { return it }
+    val stationEndpoint = connection.stationListEndpoint.trim()
+    val marker = "/LDBSVWS/api/"
+    val index = stationEndpoint.indexOf(marker, ignoreCase = true)
+    if (index < 0) return ""
+    return stationEndpoint.substring(0, index) +
+        "/LDBSVWS/api/ref/20211101/GetReasonCodeList"
 }

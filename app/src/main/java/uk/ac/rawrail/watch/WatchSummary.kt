@@ -94,9 +94,13 @@ private fun liveCallingTime(point: CallingPoint?): String {
 }
 
 private fun disruptionText(service: RawService, point: CallingPoint?): String {
-    if (service.isCancelled) return service.cancelReasonCode?.let { "CANCELLED C$it" } ?: "CANCELLED"
-    if (point?.isCancelled == true) return point.cancelReasonCode?.let { "stop cancelled C$it" } ?: "stop cancelled"
+    if (service.isCancelled) return service.cancelReason?.let { "CANCELLED · $it" }
+        ?: service.cancelReasonCode?.let { "CANCELLED C$it" } ?: "CANCELLED"
+    if (point?.isCancelled == true) return point.cancelReason?.let { "stop cancelled · $it" }
+        ?: point.cancelReasonCode?.let { "stop cancelled C$it" } ?: "stop cancelled"
     if (service.futureCancellation == true) return "cancellation expected"
+    service.delayReason?.let { return it }
+    point?.delayReason?.let { return it }
     if (service.futureDelay == true) return "delay expected"
 
     val departureDelay = delayMinutes(service.scheduledDeparture, service.expectedDeparture)
@@ -106,8 +110,7 @@ private fun disruptionText(service: RawService, point: CallingPoint?): String {
     service.delayReasonCode?.let { return "DLY $it" }
     point?.delayReasonCode?.let { return "DLY $it" }
     if (service.expectedDeparture.equals("Delayed", ignoreCase = true) ||
-        point?.estimatedTime.equals("Delayed", ignoreCase = true) ||
-        service.delayReason != null || point?.delayReason != null) return "delayed"
+        point?.estimatedTime.equals("Delayed", ignoreCase = true)) return "delayed"
     if (service.overdueMessage != null) return "overdue"
     return "on time"
 }

@@ -22,6 +22,7 @@ data class DarwinConnection(
         "https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120/GetDepartureBoard/{crs}",
     val stationListEndpoint: String = "",
     val stationListApiKey: String = "",
+    val reasonCodeEndpoint: String = "",
     val staffEndpointTemplate: String = "https://api1.raildata.org.uk/1010-live-departure-board---staff-version1_0/LDBSVWS/api/20220120/GetDepBoardWithDetails/{crs}/{time}",
     val staffApiKey: String = "",
 ) {
@@ -92,6 +93,7 @@ class SecureCredentialStore(context: Context) {
             .putString("boardEndpoint", encrypt(connection.boardEndpointTemplate))
             .putString("stationListEndpoint", encrypt(connection.stationListEndpoint))
             .putString("stationListApiKey", encrypt(connection.stationListApiKey))
+            .putString("reasonCodeEndpoint", encrypt(connection.reasonCodeEndpoint))
             .putString("staffEndpoint", encrypt(connection.staffEndpointTemplate))
             .putString("staffApiKey", encrypt(connection.staffApiKey))
             .apply()
@@ -113,6 +115,7 @@ class SecureCredentialStore(context: Context) {
                 },
             stationListEndpoint = decrypt(prefs.getString("stationListEndpoint", null)),
             stationListApiKey = decrypt(prefs.getString("stationListApiKey", null)),
+            reasonCodeEndpoint = decrypt(prefs.getString("reasonCodeEndpoint", null)),
             staffEndpointTemplate = decrypt(prefs.getString("staffEndpoint", null)).ifBlank { DarwinConnection().staffEndpointTemplate },
             staffApiKey = decrypt(prefs.getString("staffApiKey", null)),
         )

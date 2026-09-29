@@ -27,7 +27,8 @@ The project is independent and is not endorsed by National Rail or the Rail Deli
 - Android Studio with JDK 17 or newer.
 - Android SDK platform 36.
 - A Rail Data Marketplace consumer key subscribed to the Staff Live Departure Board product.
-- Optionally, access to Public Live Departure Boards and Reference Data.
+- A separate Rail Data Marketplace Reference Data consumer key to translate Darwin reason codes into text.
+- Optionally, access to Public Live Departure Boards.
 
 ## Getting started
 
@@ -35,8 +36,9 @@ The project is independent and is not endorsed by National Rail or the Rail Deli
 2. Let Android Studio install the requested SDK components and complete Gradle sync.
 3. Run the `app` configuration on an emulator or Android device.
 4. Open the app's settings and enter the Staff RDM consumer key.
-5. Optionally enter the Public comparator and Reference Data keys.
-6. Choose an origin and destination, then open the live route.
+5. Enter the Reference Data consumer key and copy the `GetReasonCodeList` endpoint from that product's specification. This is required for delay and cancellation descriptions.
+6. Optionally enter the Public comparator key.
+7. Choose an origin and destination, then open the live route.
 
 RDM endpoints authenticate with the consumer key in the `x-apikey` header. The consumer secret is not used by these endpoints.
 
@@ -47,10 +49,10 @@ No credentials are committed to this repository. The app encrypts entered keys w
 The configured defaults are:
 
 - Staff board: `LDBSVWS/api/20220120/GetDepBoardWithDetails/{crs}/{time}`
-- Staff reasons: `LDBSVWS/api/20220120/GetReasonCodeList`
+- Reference Data reasons: `LDBSVWS/api/ref/20211101/GetReasonCodeList`
 - Public comparator: `LDBWS/api/20220120/GetDepartureBoard/{crs}`
 
-Staff delay/cancellation objects contain numeric codes. Platform 8 9/4 downloads Darwin's reason-code reference list, caches it for 24 hours in the running app, and combines each code with its delay or cancellation description and optional TIPLOC context.
+Staff delay/cancellation objects contain numeric codes. The reason catalogue belongs to the separate RDM Reference Data product and uses that product's consumer key. Platform 8 9/4 downloads the catalogue, caches it for 24 hours in the running app, and combines each code with its delay or cancellation description and optional TIPLOC context. If only a Reference Data `GetStationList` endpoint is saved, the app derives the matching `GetReasonCodeList` URL automatically.
 
 ## Live watching and widgets
 
@@ -99,7 +101,7 @@ Do not run instrumentation tests against a personal production installation; the
 
 ## Release
 
-The current release is **v0.20.1**. See [the release notes](docs/releases/v0.20.1.md) for the consolidated feature set and validation results.
+The current release is **v0.20.2**. See [the release notes](docs/releases/v0.20.2.md) for the corrected Reference Data reason-code integration.
 
 ## Licence
 

@@ -277,7 +277,17 @@ class MainViewModel @JvmOverloads constructor(application: Application, private 
         repository.clearWatches(); repository.foreground(null); credentials.clear(); collectJob?.cancel()
         _state.value = _state.value.copy(configured = false, board = null, routeOpen = false, showSettings = true)
     }
-    suspend fun testConnection(connection: DarwinConnection): Result<Unit> = try { DarwinStaffClient().departures("RYS", connection); Result.success(Unit) } catch (e: CancellationException) { throw e } catch (_: Exception) { Result.failure(IllegalStateException("Check the Staff endpoint, API key and connection.")) }
+    suspend fun testConnection(connection: DarwinConnection): Result<Unit> = try {
+        DarwinStaffClient().departures("RYS", connection)
+        if (connection.stationListApiKey.isNotBlank() || resolveReasonCodeEndpoint(connection).isNotBlank()) {
+            DarwinPublicClient().reasonCodeList(connection)
+        }
+        Result.success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
     /** Active -> pause. Paused/saved or new -> resume/start immediately. */
     fun toggleWatch() {
         val route = _state.value.route

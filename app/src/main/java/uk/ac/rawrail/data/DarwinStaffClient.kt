@@ -35,6 +35,7 @@ class DarwinStaffClient(private val client: DarwinPublicClient = DarwinPublicCli
     private val reasonMutex = Mutex()
     @Volatile private var reasonCache: ReasonCache? = null
     @Volatile private var nextReasonRetryElapsed: Long = 0L
+    @Volatile private var nextReasonRetryFingerprint: Int = 0
 
     private data class ReasonCache(
         val refreshedElapsed: Long,
@@ -92,18 +93,22 @@ class DarwinStaffClient(private val client: DarwinPublicClient = DarwinPublicCli
         connection: DarwinConnection,
     ): Map<Int, DarwinPublicClient.ReasonDescription> {
         val now = SystemClock.elapsedRealtime()
-        val fingerprint = 31 * connection.staffEndpointTemplate.hashCode() + connection.staffApiKey.hashCode()
+        val fingerprint = reasonConnectionFingerprint(connection)
         reasonCache?.takeIf {
             it.connectionFingerprint == fingerprint && now - it.refreshedElapsed < REASON_CACHE_MS
         }?.let { return it.values }
-        if (now < nextReasonRetryElapsed) return reasonCache?.values.orEmpty()
+        if (fingerprint == nextReasonRetryFingerprint && now < nextReasonRetryElapsed) {
+            return reasonCache?.values.orEmpty()
+        }
 
         return reasonMutex.withLock {
             val lockedNow = SystemClock.elapsedRealtime()
             reasonCache?.takeIf {
                 it.connectionFingerprint == fingerprint && lockedNow - it.refreshedElapsed < REASON_CACHE_MS
             }?.let { return@withLock it.values }
-            if (lockedNow < nextReasonRetryElapsed) return@withLock reasonCache?.values.orEmpty()
+            if (fingerprint == nextReasonRetryFingerprint && lockedNow < nextReasonRetryElapsed) {
+                return@withLock reasonCache?.values.orEmpty()
+            }
 
             val staffConnection = connection.copy(
                 authMode = AuthMode.RDM_API_KEY,
@@ -114,13 +119,18 @@ class DarwinStaffClient(private val client: DarwinPublicClient = DarwinPublicCli
                 .onSuccess { values ->
                     reasonCache = ReasonCache(lockedNow, fingerprint, values)
                     nextReasonRetryElapsed = 0L
+                    nextReasonRetryFingerprint = 0
                 }
                 .onFailure {
                     nextReasonRetryElapsed = lockedNow + REASON_RETRY_MS
+                    nextReasonRetryFingerprint = fingerprint
                 }
                 .getOrElse { reasonCache?.values.orEmpty() }
         }
     }
+
+    private fun reasonConnectionFingerprint(connection: DarwinConnection): Int =
+        31 * resolveReasonCodeEndpoint(connection).hashCode() + connection.stationListApiKey.hashCode()
 
     private suspend fun fetchCompleteWindow(
         crs: String,

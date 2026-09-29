@@ -939,7 +939,9 @@ private fun reasonBody(
     near: Boolean?,
 ): String = buildList {
     if (!text.isNullOrBlank()) add(text)
-    if (text.isNullOrBlank() && code != null) add("Darwin $kind reason code $code")
+    if (text.isNullOrBlank() && code != null) {
+        add("Description unavailable — configure Reference Data in Settings")
+    }
     if (!tiploc.isNullOrBlank()) add("${if (near == true) "near" else "at"} $tiploc")
 }.joinToString(" · ").ifBlank { "Reason supplied by Darwin" }
 
@@ -1107,6 +1109,7 @@ private fun ConnectionSheet(vm: MainViewModel, state: MainUiState) {
     var boardEndpoint by remember { mutableStateOf(existing.boardEndpointTemplate) }
     var stationListEndpoint by remember { mutableStateOf(existing.stationListEndpoint) }
     var stationListApiKey by remember { mutableStateOf(existing.stationListApiKey) }
+    var reasonCodeEndpoint by remember { mutableStateOf(existing.reasonCodeEndpoint) }
     var staffEndpoint by remember { mutableStateOf(existing.staffEndpointTemplate) }
     var staffApiKey by remember { mutableStateOf(existing.staffApiKey) }
     var showAdvanced by remember { mutableStateOf(false) }
@@ -1149,6 +1152,27 @@ private fun ConnectionSheet(vm: MainViewModel, state: MainUiState) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             ApiKeyField("Staff API key", staffApiKey) { staffApiKey = it }
+
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "Delay and cancellation descriptions",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Darwin sends numeric reason codes on the Staff feed. Paste the consumer key and GetReasonCodeList endpoint from the separate RDM Reference Data product to show their text.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            ApiKeyField("Reference Data API key", stationListApiKey) { stationListApiKey = it }
+            OutlinedTextField(
+                value = reasonCodeEndpoint,
+                onValueChange = { reasonCodeEndpoint = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("GetReasonCodeList endpoint") },
+                supportingText = { Text("Ends with /LDBSVWS/api/ref/20211101/GetReasonCodeList") },
+                singleLine = false
+            )
 
             Spacer(Modifier.height(10.dp))
             Text(
@@ -1219,8 +1243,6 @@ private fun ConnectionSheet(vm: MainViewModel, state: MainUiState) {
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("GetStationList endpoint") }
                 )
-                ApiKeyField("Reference Data API key", stationListApiKey) { stationListApiKey = it }
-
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = staffEndpoint,
@@ -1238,6 +1260,7 @@ private fun ConnectionSheet(vm: MainViewModel, state: MainUiState) {
                 boardEndpointTemplate = boardEndpoint.trim(),
                 stationListEndpoint = stationListEndpoint.trim(),
                 stationListApiKey = stationListApiKey.trim(),
+                reasonCodeEndpoint = reasonCodeEndpoint.trim(),
                 staffEndpointTemplate = staffEndpoint.trim(),
                 staffApiKey = staffApiKey.trim()
             )
@@ -1261,8 +1284,15 @@ private fun ConnectionSheet(vm: MainViewModel, state: MainUiState) {
                         scope.launch {
                             val result = vm.testConnection(candidate)
                             testing = false
-                            testMessage = if (result.isSuccess) "Connection successful"
-                            else "Connection failed. Check the Staff endpoint, API key and connection."
+                            testMessage = if (result.isSuccess) {
+                                if (stationListApiKey.isNotBlank() || reasonCodeEndpoint.isNotBlank()) {
+                                    "Staff and Reference Data connections successful"
+                                } else {
+                                    "Staff connection successful · Reference Data not configured"
+                                }
+                            } else {
+                                "Connection failed. Check the Staff and Reference Data endpoints, keys and connection."
+                            }
                         }
                     }
                 ) { Text(if (testing) "Testing…" else "Test live board") }

@@ -63,4 +63,28 @@ class VerifiedPayloadTest {
         assertEquals(812, service.delayReasonCode)
         assertEquals("HITCHIN", service.delayReasonTiploc)
     }
+
+    @Test fun parsesWrappedReferenceDataReasonResponse() {
+        val reasons = parser.parseReasonCodeList(
+            """{"GetReasonCodeListResult":{"reason":[{"Code":"812","LateReason":"This train has been delayed by engineering works not being finished on time","CancReason":"This train has been cancelled because of engineering works not being finished on time"}]}}"""
+        )
+        assertEquals(
+            "This train has been delayed by engineering works not being finished on time",
+            reasons[812]?.lateReason
+        )
+        assertEquals(
+            "This train has been cancelled because of engineering works not being finished on time",
+            reasons[812]?.cancellationReason
+        )
+    }
+
+    @Test fun derivesReasonEndpointFromReferenceDataProduct() {
+        val connection = uk.ac.rawrail.security.DarwinConnection(
+            stationListEndpoint = "https://api1.raildata.org.uk/reference-product/LDBSVWS/api/ref/20211101/GetStationList"
+        )
+        assertEquals(
+            "https://api1.raildata.org.uk/reference-product/LDBSVWS/api/ref/20211101/GetReasonCodeList",
+            resolveReasonCodeEndpoint(connection)
+        )
+    }
 }
