@@ -17,7 +17,7 @@ The project is independent and is not endorsed by National Rail or the Rail Deli
 - Passenger calling points only; operational timing and pass locations are excluded from the visible stop list.
 - `London (Any)` aggregation for the King's Cross and St Pancras cluster.
 - Configurable home-screen departure-board widget showing the next three matching trains.
-- Optional foreground-service monitoring with platform and disruption notifications.
+- Favourites can be opened, run for continued monitoring, paused, resumed or removed from one list.
 - Durable SQLite observation and transition history.
 - Offline GB station directory with optional Rail Data Marketplace reference-data refresh.
 
@@ -54,9 +54,9 @@ The configured defaults are:
 
 Staff delay/cancellation objects contain numeric codes. The reason catalogue belongs to the separate RDM Reference Data product and uses that product's consumer key. Platform 8 9/4 downloads the catalogue, caches it for 24 hours in the running app, and combines each code with its delay or cancellation description and optional TIPLOC context. If only a Reference Data `GetStationList` endpoint is saved, the app derives the matching `GetReasonCodeList` URL automatically.
 
-## Live watching and widgets
+## Live routes, favourites and widgets
 
-Opening a route starts live foreground polling without a separate refresh action. Pull-to-refresh remains available as an escape hatch. A watched route can continue through an Android `dataSync` foreground service, subject to Android's background execution limits.
+Opening a route starts live foreground polling without a separate refresh action. Pull-to-refresh remains available as an escape hatch. Saving the route as a favourite adds it to the dashboard, where it can be run for continued monitoring, paused, resumed or removed. Continued runs use an Android `dataSync` foreground service and remain subject to Android's background execution limits.
 
 The home-screen widget uses the same repository and observation store as the app. It does not create a second polling loop. Its switch starts or pauses a short monitoring lease for the selected route.
 
@@ -101,7 +101,7 @@ Do not run instrumentation tests against a personal production installation; the
 
 ## Release
 
-The current release is **v0.20.2**. See [the release notes](docs/releases/v0.20.2.md) for the corrected Reference Data reason-code integration.
+The current release is **v0.20.3**. See [the release notes](docs/releases/v0.20.3.md) for the unified favourites workflow.
 
 ## Licence
 

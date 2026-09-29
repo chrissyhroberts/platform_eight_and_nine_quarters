@@ -36,6 +36,20 @@ class AppPreferences(context: Context) {
         return routes.values.sortedBy { it.title }
     }
 
+    fun removeFavourite(routeKey: String): List<Route> {
+        val routes = favouriteRoutes().associateBy { it.key }.toMutableMap()
+        routes.remove(routeKey)
+        prefs.edit().putStringSet(KEY_FAVOURITES, routes.values.map { json.encodeToString(it) }.toSet()).apply()
+        return routes.values.sortedBy { it.title }
+    }
+
+    /** One-time, idempotent migration from the former separate Watching list. */
+    fun migrateSavedWatchesToFavourites(): List<Route> {
+        val merged = (favouriteRoutes() + watchRoutes()).distinctBy { it.key }.sortedBy { it.title }
+        prefs.edit().putStringSet(KEY_FAVOURITES, merged.map { json.encodeToString(it) }.toSet()).apply()
+        return merged
+    }
+
     /** Saved watch routes survive app sessions; active monitoring is deliberately session-scoped. */
     fun watchRoutes(): List<Route> = prefs.getStringSet(KEY_WATCH_ROUTES, emptySet()).orEmpty()
         .mapNotNull { encoded -> runCatching { json.decodeFromString<Route>(encoded) }.getOrNull() }

@@ -265,6 +265,22 @@ fun RawRailScreen(vm: MainViewModel = viewModel()) {
 
 @Composable
 private fun SearchPanel(state: MainUiState, vm: MainViewModel) {
+    val context = LocalContext.current
+    var denied by remember { mutableStateOf(false) }
+    var pendingRun by remember { mutableStateOf<Route?>(null) }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed ->
+        val route = pendingRun
+        pendingRun = null
+        if (allowed && route != null) vm.runFavourite(route) else if (!allowed) denied = true
+    }
+    val runFavourite: (Route) -> Unit = { route ->
+        if (Build.VERSION.SDK_INT < 33 || context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            vm.runFavourite(route)
+        } else {
+            pendingRun = route
+            permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
     if (state.routeOpen) {
         TextButton(
             onClick = vm::closeRoute,
@@ -280,76 +296,6 @@ private fun SearchPanel(state: MainUiState, vm: MainViewModel) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        if (state.watchRoutes.isNotEmpty()) {
-            Text(
-                "Watching",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(6.dp))
-            state.watchRoutes.forEach { route ->
-                val active = route.key in state.activeWatchKeys
-                val watch = state.watchSummaries[route.key]
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-                ) {
-                    Column(Modifier.padding(horizontal = 14.dp, vertical = 11.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                if (active) "●" else "Ⅱ",
-                                color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(end = 10.dp)
-                            )
-                            Text(route.title, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                            if (!active) {
-                                Text(
-                                    "PAUSED",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(start = 14.dp),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            TextButton(onClick = { vm.openFavourite(route) }) { Text("Open") }
-                            if (active) {
-                                TextButton(onClick = { vm.pauseWatch(route) }) { Text("Pause") }
-                            } else {
-                                TextButton(onClick = { vm.resumeWatch(route) }) { Text("Resume") }
-                                TextButton(onClick = { vm.removeWatch(route) }) { Text("Remove") }
-                            }
-                        }
-                        watch?.lines?.take(3)?.forEach { line ->
-                            Text(
-                                line,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(start = 22.dp, top = 2.dp)
-                            )
-                        } ?: Text(
-                            if (active) "Starting live watch…" else "No cached train data yet",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 22.dp, top = 2.dp)
-                        )
-                        Text(
-                            if (active) {
-                                watch?.status ?: "Connecting · ${state.pollIntervalSeconds}s polling"
-                            } else {
-                                "PAUSED · Resume to start live updating"
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 22.dp, top = 4.dp)
-                        )
-                    }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-        }
         if (state.favourites.isNotEmpty()) {
             Text(
                 "Favourites",
@@ -359,30 +305,66 @@ private fun SearchPanel(state: MainUiState, vm: MainViewModel) {
             )
             Spacer(Modifier.height(6.dp))
             state.favourites.forEach { route ->
+                val active = route.key in state.activeWatchKeys
+                val paused = route.key in state.pausedFavouriteKeys
+                val summary = state.watchSummaries[route.key]
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 6.dp)
-                        .clickable { vm.openFavourite(route) }
+                    color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                 ) {
-                    Row(
-                        Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("★", color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 10.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(route.title, fontWeight = FontWeight.SemiBold)
+                    Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                route.origin.crs + (route.destination?.let { " → ${it.crs}" } ?: " · all departures"),
+                                if (active) "●" else "★",
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(end = 10.dp)
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(route.title, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    route.origin.crs + (route.destination?.let { " → ${it.crs}" } ?: " · all departures"),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                if (active) "RUNNING" else if (paused) "PAUSED" else "SAVED",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        Text("Open", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = { vm.openFavourite(route) }) { Text("Open") }
+                            if (active) {
+                                TextButton(onClick = { vm.pauseFavourite(route) }) { Text("Pause") }
+                            } else {
+                                TextButton(onClick = { runFavourite(route) }) {
+                                    Text(if (paused) "Resume" else "Run")
+                                }
+                            }
+                            TextButton(onClick = { vm.removeFavourite(route) }) { Text("Remove") }
+                        }
+                        summary?.lines?.take(3)?.forEach { line ->
+                            Text(line, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 22.dp, top = 2.dp))
+                        }
+                        if (summary != null) {
+                            Text(
+                                if (active) summary.status else "Cached · ${summary.status}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 22.dp, top = 4.dp)
+                            )
+                        }
                     }
                 }
+            }
+            if (denied) {
+                Text(
+                    "Notifications are required for a favourite to keep running outside the app.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
             Spacer(Modifier.height(8.dp))
         }
@@ -492,7 +474,7 @@ private fun BoardHeader(board: StationBoard, state: MainUiState, vm: MainViewMod
     val context = LocalContext.current
     var denied by remember { mutableStateOf(false) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed ->
-        if (allowed) vm.toggleWatch() else denied = true
+        if (allowed) vm.toggleFavouriteRunState() else denied = true
     }
     Surface(
         color = tint,
@@ -570,24 +552,26 @@ private fun BoardHeader(board: StationBoard, state: MainUiState, vm: MainViewMod
             )
             if (board.truncated) Text("Feed truncated: more services may exist outside this board.")
             if (board.areServicesAvailable == false) Text("Railway reports services unavailable.")
-            OutlinedButton(
-                onClick = {
-                    if (state.watching || Build.VERSION.SDK_INT < 33 || context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) vm.toggleWatch()
-                    else permission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                },
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = .55f)),
-                shape = RoundedCornerShape(14.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    when {
-                        state.watching -> "●  Monitoring · tap to pause"
-                        state.watchSaved -> "▶  Resume 30 min monitor"
-                        else -> "＋  Start 30 min monitor"
+            if (state.routeIsFavourite) {
+                OutlinedButton(
+                    onClick = {
+                        if (state.watching || Build.VERSION.SDK_INT < 33 || context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                            vm.toggleFavouriteRunState()
+                        } else {
+                            permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
                     },
-                    fontWeight = FontWeight.SemiBold
-                )
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = .55f)),
+                    shape = RoundedCornerShape(14.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        if (state.watching) "●  Favourite running · tap to pause"
+                        else "▶  Run favourite for 30 minutes",
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
             if (denied) Text("Notifications were not enabled. Live route polling continues here.", style = MaterialTheme.typography.labelSmall)
         }

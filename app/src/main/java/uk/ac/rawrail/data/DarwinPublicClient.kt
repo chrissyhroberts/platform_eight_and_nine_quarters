@@ -66,7 +66,7 @@ class DarwinPublicClient(
         val request = Request.Builder()
             .url(url)
             .header("Accept", "application/json")
-            .header("User-Agent", "Platform-8-9-4-Android/0.20.2")
+            .header("User-Agent", "Platform-8-9-4-Android/0.20.3")
             .apply {
                 when (connection.authMode) {
                     AuthMode.RDM_API_KEY -> {
@@ -117,7 +117,7 @@ class DarwinPublicClient(
             val request = Request.Builder()
                 .url(url)
                 .header("Accept", "application/json")
-                .header("User-Agent", "Platform-8-9-4-Android/0.20.2")
+                .header("User-Agent", "Platform-8-9-4-Android/0.20.3")
                 .header("x-apikey", connection.stationListApiKey)
                 .build()
             http.newCall(request).execute().use { response ->

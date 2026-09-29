@@ -43,12 +43,11 @@ data class MainUiState(
     val routeOpen: Boolean = false,
     val pollIntervalSeconds: Int = AppPreferences.DEFAULT_POLL_SECONDS,
     val favourites: List<Route> = emptyList(),
-    /** Saved watch routes, including paused watches retained for rapid resume. */
-    val watchRoutes: List<Route> = emptyList(),
-    /** Route keys currently polling in the background service. */
+    /** Favourite route keys currently polling in the background service. */
     val activeWatchKeys: Set<String> = emptySet(),
+    /** Favourites which have run before and can be resumed. */
+    val pausedFavouriteKeys: Set<String> = emptySet(),
     val watchSummaries: Map<String, WatchSummary> = emptyMap(),
-    val watchSaved: Boolean = false
 ) {
     val route: Route get() = Route(selectedStation, destination)
     val routeIsFavourite: Boolean get() = favourites.any { it.key == route.key }
@@ -60,15 +59,14 @@ class MainViewModel @JvmOverloads constructor(application: Application, private 
     private val preferences = AppPreferences(application)
     private var collectJob: Job? = null
     private var visible = false
+    private val favourites = MutableStateFlow(preferences.migrateSavedWatchesToFavourites())
     private val savedWatches = MutableStateFlow(preferences.watchRoutes())
     private val _state = MutableStateFlow(
         MainUiState(
             configured = credentials.isConfigured(),
             stationCount = stations.count(),
             pollIntervalSeconds = preferences.pollIntervalSeconds(),
-            favourites = preferences.favouriteRoutes(),
-            watchRoutes = savedWatches.value,
-            watchSaved = preferences.isSavedWatch(Route(StationRef("RYS", "Royston"), Route.londonAny))
+            favourites = favourites.value,
         )
     )
     val state = _state.asStateFlow()
@@ -76,26 +74,29 @@ class MainViewModel @JvmOverloads constructor(application: Application, private 
         viewModelScope.launch {
             preferences.watchRoutesFlow().collect { routes ->
                 if (routes != savedWatches.value) savedWatches.value = routes
+                val merged = preferences.migrateSavedWatchesToFavourites()
+                if (merged != favourites.value) favourites.value = merged
             }
         }
         viewModelScope.launch {
-            combine(repository.watches, savedWatches) { active, saved -> active to saved }
-                .flatMapLatest { (active, saved) ->
-                    // Service-started routes are also saved by the service, but include them here
-                    // immediately so the dashboard never waits on SharedPreferences propagation.
-                    val routes = (saved + active.values).distinctBy { it.key }.sortedBy { it.title }
+            combine(repository.watches, savedWatches, favourites) { active, saved, favouriteRoutes ->
+                Triple(active, saved, favouriteRoutes)
+            }
+                .flatMapLatest { (active, saved, favouriteRoutes) ->
+                    val routes = favouriteRoutes.sortedBy { it.title }
                     val activeKeys = active.keys
+                    val pausedKeys = saved.map { it.key }.toSet() - activeKeys
                     val crs = routes.flatMap { it.originCrsSet() }.distinct()
                     if (crs.isEmpty()) {
-                        flowOf(Triple(routes, activeKeys, emptyMap<String, WatchSummary>()))
+                        flowOf(Triple(activeKeys, pausedKeys, emptyMap<String, WatchSummary>()))
                     } else {
                         val snapshotsFlow = combine(crs.map(repository::observe)) { it.toList() }
                         combine(snapshotsFlow, watchRefreshTicker()) { snapshots, now ->
                             val byCrs = snapshots.associateBy { it.crs }
                             val cadence = repository.pollIntervalSeconds()
                             Triple(
-                                routes,
                                 activeKeys,
+                                pausedKeys,
                                 routes.associate { route ->
                                     route.key to buildWatchSummary(
                                         route,
@@ -108,14 +109,14 @@ class MainViewModel @JvmOverloads constructor(application: Application, private 
                         }
                     }
                 }
-                .collect { (routes, activeKeys, summaries) ->
+                .collect { (activeKeys, pausedKeys, summaries) ->
                     val currentKey = _state.value.route.key
                     _state.value = _state.value.copy(
-                        watchRoutes = routes,
+                        favourites = favourites.value,
                         activeWatchKeys = activeKeys,
+                        pausedFavouriteKeys = pausedKeys,
                         watchSummaries = summaries,
                         watching = currentKey in activeKeys,
-                        watchSaved = routes.any { it.key == currentKey }
                     )
                 }
         }
@@ -168,7 +169,6 @@ class MainViewModel @JvmOverloads constructor(application: Application, private 
             serviceFilter = "",
             error = null,
             watching = repository.isWatched(_state.value.route),
-            watchSaved = preferences.isSavedWatch(_state.value.route)
         )
         val route = _state.value.route
         collectJob?.cancel()
@@ -259,7 +259,13 @@ class MainViewModel @JvmOverloads constructor(application: Application, private 
         _state.value = _state.value.copy(pollIntervalSeconds = preferences.pollIntervalSeconds())
     }
     fun toggleFavourite() {
-        val updated = preferences.toggleFavourite(_state.value.route)
+        val route = _state.value.route
+        if (_state.value.routeIsFavourite) {
+            if (route.key in repository.watches.value) RouteWatchService.pause(getApplication(), route.key)
+            savedWatches.value = preferences.removeWatchRoute(route.key)
+        }
+        val updated = preferences.toggleFavourite(route)
+        favourites.value = updated
         _state.value = _state.value.copy(favourites = updated)
     }
     fun openFavourite(route: Route) = selectRoute(route)
@@ -288,31 +294,33 @@ class MainViewModel @JvmOverloads constructor(application: Application, private 
     } catch (e: Exception) {
         Result.failure(e)
     }
-    /** Active -> pause. Paused/saved or new -> resume/start immediately. */
-    fun toggleWatch() {
+    fun toggleFavouriteRunState() {
         val route = _state.value.route
-        if (_state.value.watching) pauseWatch(route) else resumeWatch(route)
+        if (!_state.value.routeIsFavourite) return
+        if (_state.value.watching) pauseFavourite(route) else runFavourite(route)
     }
 
-    fun resumeWatch(route: Route) {
+    fun runFavourite(route: Route) {
+        if (favourites.value.none { it.key == route.key }) return
         val saved = preferences.saveWatchRoute(route)
         savedWatches.value = saved
-        _state.value = _state.value.copy(watchSaved = true)
         runCatching { RouteWatchService.start(getApplication(), route) }
             .onFailure { _state.value = _state.value.copy(error = "Android could not start monitoring. Reopen the route and try again.") }
     }
 
-    fun pauseWatch(route: Route) {
+    fun pauseFavourite(route: Route) {
         RouteWatchService.pause(getApplication(), route.key)
     }
 
-    fun removeWatch(route: Route) {
+    fun removeFavourite(route: Route) {
         if (route.key in repository.watches.value) RouteWatchService.pause(getApplication(), route.key)
-        val saved = preferences.removeWatchRoute(route.key)
-        savedWatches.value = saved
-        if (_state.value.route.key == route.key) {
-            _state.value = _state.value.copy(watchSaved = false, watching = false)
-        }
+        savedWatches.value = preferences.removeWatchRoute(route.key)
+        val updated = preferences.removeFavourite(route.key)
+        favourites.value = updated
+        _state.value = _state.value.copy(
+            favourites = updated,
+            watching = if (_state.value.route.key == route.key) false else _state.value.watching,
+        )
     }
     fun syncStations() { viewModelScope.launch {
         _state.value = _state.value.copy(syncingStations = true)
