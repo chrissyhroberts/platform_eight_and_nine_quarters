@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -268,6 +269,7 @@ private fun SearchPanel(state: MainUiState, vm: MainViewModel) {
     val context = LocalContext.current
     var denied by remember { mutableStateOf(false) }
     var pendingRun by remember { mutableStateOf<Route?>(null) }
+    val expandedFavourites = remember { mutableStateMapOf<String, Boolean>() }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed ->
         val route = pendingRun
         pendingRun = null
@@ -308,53 +310,65 @@ private fun SearchPanel(state: MainUiState, vm: MainViewModel) {
                 val active = route.key in state.activeWatchKeys
                 val paused = route.key in state.pausedFavouriteKeys
                 val summary = state.watchSummaries[route.key]
+                val expanded = expandedFavourites[route.key] == true
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                 ) {
-                    Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 if (active) "●" else "★",
                                 color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(end = 10.dp)
+                                modifier = Modifier.padding(horizontal = 4.dp)
                             )
-                            Column(Modifier.weight(1f)) {
-                                Text(route.title, fontWeight = FontWeight.SemiBold)
-                                Text(
-                                    route.origin.crs + (route.destination?.let { " → ${it.crs}" } ?: " · all departures"),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
                             Text(
-                                if (active) "RUNNING" else if (paused) "PAUSED" else "SAVED",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                route.title,
+                                modifier = Modifier.weight(1f),
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
-                        }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            TextButton(onClick = { vm.openFavourite(route) }) { Text("Open") }
+                            FavouriteAction("Open") { vm.openFavourite(route) }
                             if (active) {
-                                TextButton(onClick = { vm.pauseFavourite(route) }) { Text("Pause") }
+                                FavouriteAction("Pause") { vm.pauseFavourite(route) }
                             } else {
-                                TextButton(onClick = { runFavourite(route) }) {
-                                    Text(if (paused) "Resume" else "Run")
-                                }
+                                FavouriteAction(if (paused) "Resume" else "Run") { runFavourite(route) }
                             }
-                            TextButton(onClick = { vm.removeFavourite(route) }) { Text("Remove") }
+                            FavouriteAction("Remove") {
+                                expandedFavourites.remove(route.key)
+                                vm.removeFavourite(route)
+                            }
+                            FavouriteAction(if (expanded) "▴" else "▾") {
+                                expandedFavourites[route.key] = !expanded
+                            }
                         }
-                        summary?.lines?.take(3)?.forEach { line ->
-                            Text(line, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 22.dp, top = 2.dp))
-                        }
-                        if (summary != null) {
+                        if (expanded) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 5.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
                             Text(
-                                if (active) summary.status else "Cached · ${summary.status}",
+                                when {
+                                    active -> "RUNNING · ${summary?.status ?: "Connecting"}"
+                                    paused -> "PAUSED · ${summary?.status ?: "No cached train data yet"}"
+                                    else -> "SAVED · ${summary?.status ?: "No cached train data yet"}"
+                                },
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(start = 22.dp, top = 4.dp)
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
+                            summary?.lines?.take(3)?.forEach { line ->
+                                Text(
+                                    line,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -428,6 +442,17 @@ private fun SearchPanel(state: MainUiState, vm: MainViewModel) {
         Text("London (Any) watches the King's Cross / St Pancras cluster for this corridor. It is still a live-board intelligence view, not a multi-leg journey planner.",
             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
+    }
+}
+
+@Composable
+private fun FavouriteAction(label: String, onClick: () -> Unit) {
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.defaultMinSize(minWidth = 0.dp, minHeight = 36.dp),
+        contentPadding = PaddingValues(horizontal = 5.dp, vertical = 0.dp)
+    ) {
+        Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
     }
 }
 

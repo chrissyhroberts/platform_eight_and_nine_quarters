@@ -101,7 +101,7 @@ Do not run instrumentation tests against a personal production installation; the
 
 ## Release
 
-The current release is **v0.20.3**. See [the release notes](docs/releases/v0.20.3.md) for the unified favourites workflow.
+The current release is **v0.20.4**. See [the release notes](docs/releases/v0.20.4.md) for the compact expandable favourites layout.
 
 ## Licence
 

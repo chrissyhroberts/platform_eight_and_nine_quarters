@@ -136,7 +136,7 @@ class StationDirectory(
                     .url(connection.stationListEndpoint)
                     .header("x-apikey", connection.stationListApiKey)
                     .header("Accept", "application/json")
-                    .header("User-Agent", "Platform-8-9-4-Android/0.20.3")
+                    .header("User-Agent", "Platform-8-9-4-Android/0.20.4")
                     .build()
 
                 http.newCall(request).execute().use { response ->
